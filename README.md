@@ -38,8 +38,6 @@ Please use the [pterodactyl/panel](https://github.com/pterodactyl/panel) reposit
 feature requests for Wings. In addition, the [security policy](https://github.com/pterodactyl/panel/security/policy) listed
 within that repository also applies to Wings.
 
-|-----------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-
 ## Install Instructions
 
 1, Make a directory for wings source code and go to it: mkdir /srv/wings && cd /srv/wings
@@ -52,12 +50,17 @@ within that repository also applies to Wings.
 
 4, Paste WingsFiles to your wings folder
 
-5, a, Open /router/router.go
-   b, Paste this line to under the server.POST("/ws/deny", postServerDenyWSTokens) line
+5, 
+a, Open /router/router.go
+   
+b, Paste this line to under the server.POST("/ws/deny", postServerDenyWSTokens) line
+      
       server.POST("/versions/list", getVersions)
       server.POST("/versions/switch", switchVersion)
 
-6, Open /router/router.go
+6, 
+Open /router/router.go
+
 Paste this line to under the files.POST("/chmod", postServerChmodFile) line
 
 files.POST("/search/smart", smartSearch)
