@@ -37,3 +37,34 @@ I would like to extend my sincere thanks to the following sponsors for helping f
 Please use the [pterodactyl/panel](https://github.com/pterodactyl/panel) repository to report any issues or make
 feature requests for Wings. In addition, the [security policy](https://github.com/pterodactyl/panel/security/policy) listed
 within that repository also applies to Wings.
+
+|-----------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+
+## Install Instructions
+
+1, Make a directory for wings source code and go to it: mkdir /srv/wings && cd /srv/wings
+
+2, Download the latest release with wget or manually from github: https://github.com/pterodactyl/wings
+   a, Select the latest release and download, for example: wget https://github.com/pterodactyl/wings/archive/release/v1.3.0.zip
+   b, Select the latest release and download with the Code -> Download ZIP Button and upload manually to your server
+
+3, Unzip it: unzip  v1.3.0.zip
+
+4, Paste WingsFiles to your wings folder
+
+5, a, Open /router/router.go
+   b, Paste this line to under the server.POST("/ws/deny", postServerDenyWSTokens) line
+      server.POST("/versions/list", getVersions)
+      server.POST("/versions/switch", switchVersion)
+
+6, Open /router/router.go
+Paste this line to under the files.POST("/chmod", postServerChmodFile) line
+
+files.POST("/search/smart", smartSearch)
+
+7, Install go: https://golang.org/doc/install
+
+8, Build the new wings (if you created to other folder, change it - or if your wings is other folder, change it): 
+   - cd /srv/wings/ && go build -o /usr/local/bin/wings && chmod +x /usr/local/bin/wings
+
+9, Restart wings: service wings restart
