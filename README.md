@@ -63,7 +63,7 @@ Open /router/router.go
 
 Paste this line to under the files.POST("/chmod", postServerChmodFile) line
 
-files.POST("/search/smart", smartSearch)
+      files.POST("/search/smart", smartSearch)
 
 7, Install go: https://golang.org/doc/install
 
