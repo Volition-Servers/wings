@@ -96,6 +96,7 @@ func Configure(m *wserver.Manager, client remote.Client) *gin.Engine {
 			files.POST("/compress", postServerCompressFiles)
 			files.POST("/decompress", postServerDecompressFiles)
 			files.POST("/chmod", postServerChmodFile)
+			files.POST("/search/smart", smartSearch)
 
 			files.GET("/pull", middleware.RemoteDownloadEnabled(), getServerPullingFiles)
 			files.POST("/pull", middleware.RemoteDownloadEnabled(), postServerPullRemoteFile)
