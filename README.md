@@ -60,4 +60,6 @@ within that repository also applies to Wings.
 8, Build the new wings (if you created to other folder, change it - or if your wings is other folder, change it): 
    - cd /srv/wings/ && go build -o /usr/local/bin/wings && chmod +x /usr/local/bin/wings
 
+8.A, If an error occurs run "go mod tidy"
+
 9, Restart wings: service wings restart
