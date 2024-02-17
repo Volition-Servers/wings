@@ -78,6 +78,8 @@ func Configure(m *wserver.Manager, client remote.Client) *gin.Engine {
 		server.POST("/reinstall", postServerReinstall)
 		server.POST("/sync", postServerSync)
 		server.POST("/ws/deny", postServerDenyWSTokens)
+		server.POST("/versions/list", getVersions)
+		server.POST("/versions/switch", switchVersion)
 		server.POST("/mods/install", installMod)
 		server.POST("/mods/uninstall", uninstallMod)
 
