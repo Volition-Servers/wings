@@ -190,6 +190,16 @@ func (c *client) SendActivityLogs(ctx context.Context, activity []models.Activit
 	return nil
 }
 
+// SendCrashLogs sends crash logs to handle it
+func (c *client) SendCrashLogs(ctx context.Context, uuid string, data string) error {
+	resp, err := c.Post(ctx, fmt.Sprintf("/servers/%s/crashlog", uuid), d{"data": data})
+	if err != nil {
+		return errors.WithStackIf(err)
+	}
+	_ = resp.Body.Close()
+	return nil
+}
+
 // getServersPaged returns a subset of servers from the Panel API using the
 // pagination query parameters.
 func (c *client) getServersPaged(ctx context.Context, page, limit int) ([]RawServerData, Pagination, error) {
