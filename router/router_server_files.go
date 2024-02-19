@@ -25,6 +25,7 @@ import (
 	"github.com/pterodactyl/wings/router/tokens"
 	"github.com/pterodactyl/wings/server"
 	"github.com/pterodactyl/wings/server/filesystem"
+	"github.com/pterodactyl/wings/sftperms"
 )
 
 // getServerFileContents returns the contents of a file on the server.
@@ -391,8 +392,9 @@ func postServerCompressFiles(c *gin.Context) {
 	s := ExtractServer(c)
 
 	var data struct {
-		RootPath string   `json:"root"`
-		Files    []string `json:"files"`
+		RootPath         string                    `json:"root"`
+		Files            []string                  `json:"files"`
+		FilesPermissions sftperms.FilesPermissions `json:"files_permissions"`
 	}
 
 	if err := c.BindJSON(&data); err != nil {
@@ -413,7 +415,7 @@ func postServerCompressFiles(c *gin.Context) {
 		return
 	}
 
-	f, err := s.Filesystem().CompressFiles(data.RootPath, data.Files)
+	f, err := s.Filesystem().CompressFiles(data.RootPath, data.Files, data.FilesPermissions)
 	if err != nil {
 		middleware.CaptureAndAbort(c, err)
 		return

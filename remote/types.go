@@ -2,6 +2,7 @@ package remote
 
 import (
 	"bytes"
+	"github.com/pterodactyl/wings/sftperms"
 	"regexp"
 	"strings"
 
@@ -81,6 +82,14 @@ type SftpAuthRequest struct {
 	ClientVersion []byte              `json:"client_version"`
 }
 
+type SftpAuthDenyTypes struct {
+	User  []string `json:"User"`
+	Admin []string `json:"Admin"`
+	Egg   []string `json:"Egg"`
+
+	HideFiles sftperms.HideFilesStruct `json:"HideFiles"`
+}
+
 // SftpAuthResponse is returned by the Panel when a pair of SFTP credentials
 // is successfully validated. This will include the specific server that was
 // matched as well as the permissions that are assigned to the authenticated
@@ -89,6 +98,7 @@ type SftpAuthResponse struct {
 	Server      string   `json:"server"`
 	User        string   `json:"user"`
 	Permissions []string `json:"permissions"`
+	FilesPermissions *SftpAuthDenyTypes `json:"files_permissions"`
 }
 
 type OutputLineMatcher struct {

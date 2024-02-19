@@ -16,6 +16,7 @@ import (
 	"github.com/pterodactyl/wings/config"
 	"github.com/pterodactyl/wings/server"
 	"github.com/pterodactyl/wings/server/filesystem"
+	"github.com/pterodactyl/wings/sftperms"
 )
 
 const (
@@ -32,6 +33,7 @@ type Handler struct {
 	fs          *filesystem.Filesystem
 	events      *eventHandler
 	permissions []string
+	filesPermissions sftperms.FilesPermissions
 	logger      *log.Entry
 	ro          bool
 }
@@ -50,8 +52,20 @@ func NewHandler(sc *ssh.ServerConn, srv *server.Server) (*Handler, error) {
 		server: srv.ID(),
 	}
 
+	filesPermissions := sftperms.FilesPermissions{
+		User:  strings.Split(sc.Permissions.Extensions["userdeny"], ","),
+		Admin: strings.Split(sc.Permissions.Extensions["admindeny"], ","),
+		Egg:   strings.Split(sc.Permissions.Extensions["eggdeny"], ","),
+		HideFiles: sftperms.HideFilesStruct{
+			User:  sc.Permissions.Extensions["userhide"],
+			Admin: sc.Permissions.Extensions["adminhide"],
+			Egg:   sc.Permissions.Extensions["egghide"],
+		},
+	}
+
 	return &Handler{
 		permissions: strings.Split(sc.Permissions.Extensions["permissions"], ","),
+		filesPermissions: filesPermissions,
 		server:      srv,
 		fs:          srv.Filesystem(),
 		events:      &events,
@@ -88,6 +102,10 @@ func (h *Handler) Fileread(request *sftp.Request) (io.ReaderAt, error) {
 		}
 		return nil, sftp.ErrSSHFxNoSuchFile
 	}
+	_, _, err = sftperms.HasAccess(request.Filepath, h.filesPermissions)
+	if err != nil {
+		return nil, err
+	}
 	return f, nil
 }
 
@@ -122,6 +140,10 @@ func (h *Handler) Filewrite(request *sftp.Request) (io.WriterAt, error) {
 	if !h.can(permission) {
 		return nil, sftp.ErrSSHFxPermissionDenied
 	}
+	_, _, err := sftperms.HasAccess(request.Filepath, h.filesPermissions)
+	if err != nil {
+		return nil, err
+	}
 	f, err := h.fs.Touch(request.Filepath, os.O_RDWR|os.O_CREATE|os.O_TRUNC)
 	if err != nil {
 		l.WithField("flags", request.Flags).WithField("error", err).Error("failed to open existing file on system")
@@ -147,6 +169,10 @@ func (h *Handler) Filecmd(request *sftp.Request) error {
 	l := h.logger.WithField("source", request.Filepath)
 	if request.Target != "" {
 		l = l.WithField("target", request.Target)
+	}
+	_, _, err := sftperms.HasAccess(request.Filepath, h.filesPermissions)
+	if err != nil {
+		return err
 	}
 
 	switch request.Method {
@@ -282,6 +308,22 @@ func (h *Handler) Filelist(request *sftp.Request) (sftp.ListerAt, error) {
 		if err != nil {
 			h.logger.WithField("source", request.Filepath).WithField("error", err).Error("error while listing directory")
 			return nil, sftp.ErrSSHFxFailure
+		}
+		if h.filesPermissions.HideFiles.User == "true" || h.filesPermissions.HideFiles.Admin == "true" || h.filesPermissions.HideFiles.Egg == "true" {
+			if len(files) == 0 {
+				return ListerAt(files), nil
+			}
+
+			sortedFiles := sftperms.HideFiles(request, files, h.filesPermissions)
+
+			if len(sortedFiles) == 0 {
+				return nil, sftp.ErrSSHFxPermissionDenied
+			}
+			if sortedFiles != nil {
+				return ListerAt(sortedFiles), nil
+			} else {
+				return ListerAt(files), nil
+			}
 		}
 		return ListerAt(files), nil
 	case "Stat":

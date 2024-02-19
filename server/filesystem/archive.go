@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"context"
 	"fmt"
+	"github.com/pterodactyl/wings/sftperms"
 	"io"
 	"io/fs"
 	"os"
@@ -70,6 +71,12 @@ type Archive struct {
 	//
 	// All items in Files must be absolute within BasePath.
 	Files []string
+	FilesPermissions sftperms.FilesPermissions
+
+	Items     []struct {
+		Path     string
+		Relative string
+	}
 
 	// Progress wraps the writer of the archive to pass through the progress tracker.
 	Progress *progress.Progress
@@ -169,7 +176,31 @@ func (a *Archive) Stream(ctx context.Context, w io.Writer) error {
 	}
 
 	// Recursively walk the path we are archiving.
-	return godirwalk.Walk(a.BasePath, options)
+	err := godirwalk.Walk(a.BasePath, options)
+	if err != nil {
+		return err
+	}
+
+	var relativePaths []string
+
+	for _, item := range a.Items {
+		relativePaths = append(relativePaths, item.Relative)
+	}
+
+	acceptedFiles, _, _ := sftperms.HasAccess(relativePaths, a.FilesPermissions)
+
+	for _, acceptedFile := range acceptedFiles {
+		for _, item := range a.Items {
+			if acceptedFile == item.Relative {
+				err := a.addToArchive(item.Path, item.Relative, pw)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	return nil
 }
 
 // Callback function used to determine if a given file should be included in the archive
@@ -191,9 +222,12 @@ func (a *Archive) callback(tw *TarProgress, opts ...func(path string, relative s
 			}
 		}
 
-		// Add the file to the archive, if it is nested in a directory,
-		// the directory will be automatically "created" in the archive.
-		return a.addToArchive(path, relative, tw)
+		a.Items = append(a.Items, struct {
+			Path     string
+			Relative string
+		}{Path: path, Relative: relative})
+
+		return nil
 	}
 }
 

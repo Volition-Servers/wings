@@ -240,6 +240,12 @@ func (c *SFTPServer) makeCredentialsRequest(conn ssh.ConnMetadata, t remote.Sftp
 			"uuid":        resp.Server,
 			"user":        resp.User,
 			"permissions": strings.Join(resp.Permissions, ","),
+			"userdeny":    strings.Join(resp.FilesPermissions.User, ","),
+			"userhide":    resp.FilesPermissions.HideFiles.User,
+			"admindeny":   strings.Join(resp.FilesPermissions.Admin, ","),
+			"adminhide":   resp.FilesPermissions.HideFiles.Admin,
+			"eggdeny":     strings.Join(resp.FilesPermissions.Egg, ","),
+			"egghide":     resp.FilesPermissions.HideFiles.Egg,
 		},
 	}
 
