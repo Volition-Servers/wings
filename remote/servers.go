@@ -221,3 +221,29 @@ func (c *client) getServersPaged(ctx context.Context, page, limit int) ([]RawSer
 	}
 	return r.Data, r.Meta, nil
 }
+
+// Get Firewall Rules
+func (c *client) GetFirewallRules(ctx context.Context, uuid string) ([]Rule, error) {
+	var r struct {
+		Success bool   `json:"success"`
+		Error   string `json:"error"`
+		Rules   []Rule `json:"rules"`
+	}
+
+	resp, err := c.Post(ctx, fmt.Sprintf("/servers/%s/rules", uuid), nil)
+	if err != nil {
+		return r.Rules, err
+	}
+
+	defer resp.Body.Close()
+
+	if err := resp.BindJSON(&r); err != nil {
+		return r.Rules, err
+	}
+
+	if r.Success != true {
+		return r.Rules, fmt.Errorf("failedToGetRules")
+	}
+
+	return r.Rules, nil
+}
