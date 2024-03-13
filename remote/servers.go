@@ -190,6 +190,16 @@ func (c *client) SendActivityLogs(ctx context.Context, activity []models.Activit
 	return nil
 }
 
+// SendCrashLogs sends crash logs to handle it
+func (c *client) SendCrashLogs(ctx context.Context, uuid string, data string) error {
+	resp, err := c.Post(ctx, fmt.Sprintf("/servers/%s/crashlog", uuid), d{"data": data})
+	if err != nil {
+		return errors.WithStackIf(err)
+	}
+	_ = resp.Body.Close()
+	return nil
+}
+
 // getServersPaged returns a subset of servers from the Panel API using the
 // pagination query parameters.
 func (c *client) getServersPaged(ctx context.Context, page, limit int) ([]RawServerData, Pagination, error) {
@@ -210,4 +220,30 @@ func (c *client) getServersPaged(ctx context.Context, page, limit int) ([]RawSer
 		return nil, r.Meta, err
 	}
 	return r.Data, r.Meta, nil
+	
+	// Get Firewall Rules
+	func (c *client) GetFirewallRules(ctx context.Context, uuid string) ([]Rule, error) {
+		var r struct {
+			Success bool   `json:"success"`
+			Error   string `json:"error"`
+			Rules   []Rule `json:"rules"`
+		}
+
+		resp, err := c.Post(ctx, fmt.Sprintf("/servers/%s/rules", uuid), nil)
+		if err != nil {
+			return r.Rules, err
+		}
+
+		defer resp.Body.Close()
+
+		if err := resp.BindJSON(&r); err != nil {
+			return r.Rules, err
+		}
+
+		if r.Success != true {
+			return r.Rules, fmt.Errorf("failedToGetRules")
+		}
+
+		return r.Rules, nil
+	}
 }

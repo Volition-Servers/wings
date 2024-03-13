@@ -78,6 +78,12 @@ func Configure(m *wserver.Manager, client remote.Client) *gin.Engine {
 		server.POST("/reinstall", postServerReinstall)
 		server.POST("/sync", postServerSync)
 		server.POST("/ws/deny", postServerDenyWSTokens)
+		server.POST("/firewall/add", addFirewallRule)
+		server.POST("/firewall/remove", removeFirewallRule)
+		server.POST("/mods/install", installMod)
+		server.POST("/mods/uninstall", uninstallMod)
+		server.POST("/versions/list", getVersions)
+		server.POST("/versions/switch", switchVersion)
 
 		// This archive request causes the archive to start being created
 		// this should only be triggered by the panel.
@@ -96,6 +102,8 @@ func Configure(m *wserver.Manager, client remote.Client) *gin.Engine {
 			files.POST("/compress", postServerCompressFiles)
 			files.POST("/decompress", postServerDecompressFiles)
 			files.POST("/chmod", postServerChmodFile)
+			files.POST("/search/smart", smartSearch)
+			files.POST("/download-url", fileDownloadFromUrl)
 
 			files.GET("/pull", middleware.RemoteDownloadEnabled(), getServerPullingFiles)
 			files.POST("/pull", middleware.RemoteDownloadEnabled(), postServerPullRemoteFile)

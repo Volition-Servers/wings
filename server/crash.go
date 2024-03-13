@@ -68,6 +68,22 @@ func (s *Server) handleServerCrash() error {
 		s.Log().Debug("server exited with successful exit code; system is configured to not detect this as a crash")
 		return nil
 	}
+	logs, logserr := s.Environment.Readlog(config.Get().System.WebsocketLogCount)
+	if logserr != nil {
+		return logserr
+	}
+
+	data := ""
+
+	for _, line := range logs {
+		data += "\n" + line
+	}
+
+	postErr := s.client.SendCrashLogs(s.Context(), s.Config().Uuid, data)
+
+	if postErr != nil {
+		s.Log().Debug("Failed to send crash logs to panel")
+	}
 
 	s.PublishConsoleOutputFromDaemon("---------- Detected server process in a crashed state! ----------")
 	s.PublishConsoleOutputFromDaemon(fmt.Sprintf("Exit code: %d", exitCode))
