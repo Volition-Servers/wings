@@ -319,3 +319,141 @@ func (a *Archive) addToArchive(dirfd int, name, relative string, entry ufs.DirEn
 	}
 	return nil
 }
+
+// Add this new function to handle recursive addition of directory contents.
+func (a *Archive) addDirectoryContents(ctx context.Context, dirPath string, tw *tar.Writer) error {
+    entries, err := os.ReadDir(dirPath)
+    if err != nil {
+        return err
+    }
+
+    for _, entry := range entries {
+        fullPath := filepath.Join(dirPath, entry.Name())
+        if entry.IsDir() {
+            if err := a.addDirectoryContents(ctx, fullPath, tw); err != nil {
+                return err
+            }
+        } else {
+            // Logic to add the file to the tar writer (tw)
+            // This might involve creating a tar header for the file and copying its contents to the tar writer.
+            // Refer to existing file handling logic in the Create function for guidance.
+            fileInfo, err := entry.Info()
+            if err != nil {
+                return err
+            }
+            header, err := tar.FileInfoHeader(fileInfo, "")
+            if err != nil {
+                return err
+            }
+            header.Name = strings.TrimPrefix(fullPath, a.Filesystem.Path()+"/")
+            if err := tw.WriteHeader(header); err != nil {
+                return err
+            }
+            if fileInfo.Mode().IsRegular() {
+                file, err := os.Open(fullPath)
+                if err != nil {
+                    return err
+                }
+                defer file.Close()
+                if _, err := io.Copy(tw, file); err != nil {
+                    return err
+                }
+            }
+        }
+    }
+
+    return nil
+}
+
+// Modify the existing Create function to use addDirectoryContents for directories.
+func (a *Archive) Create(ctx context.Context, dst string) error {
+    // Existing setup code for archive creation...
+
+    f, err := os.OpenFile(dst, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o600)
+    if err != nil {
+        return err
+    }
+    defer f.Close()
+
+    var writer io.Writer
+    if writeLimit := int64(config.Get().System.Backups.WriteLimit * 1024 * 1024); writeLimit > 0 {
+        writer = ratelimit.Writer(f, ratelimit.NewBucketWithRate(float64(writeLimit), writeLimit))
+    } else {
+        writer = f
+    }
+
+    var compressionLevel int
+    switch config.Get().System.Backups.CompressionLevel {
+    case "none":
+        compressionLevel = pgzip.NoCompression
+    case "best_compression":
+        compressionLevel = pgzip.BestCompression
+    default:
+        compressionLevel = pgzip.BestSpeed
+    }
+
+    gw, _ := pgzip.NewWriterLevel(writer, compressionLevel)
+    _ = gw.SetConcurrency(1<<20, 1)
+    defer gw.Close()
+
+    tw := tar.NewWriter(gw)
+    defer tw.Close()
+
+    a.w = NewTarProgress(tw, a.Progress)
+
+    for _, fileOrDirPath := range a.Files {
+        fileInfo, err := os.Stat(fileOrDirPath)
+        if err != nil {
+            return err
+        }
+
+        if fileInfo.IsDir() {
+            if err := a.addDirectoryContents(ctx, fileOrDirPath, tw); err != nil {
+                return err
+            }
+        } else {
+            // Existing logic to add a file to the archive
+            s, err := fileInfo, nil
+            if err != nil {
+                if errors.Is(err, ufs.ErrNotExist) {
+                    return nil
+                }
+                return errors.WrapIff(err, "failed executing os.Lstat on '%s'", fileOrDirPath)
+            }
+
+            var target string
+            if s.Mode()&fs.ModeSymlink != 0 {
+                target, err = os.Readlink(s.Name())
+                if err != nil {
+                    if !os.IsNotExist(err) {
+                        log.WithField("name", fileOrDirPath).WithField("readlink_err", err.Error()).Warn("failed reading symlink for target path; skipping...")
+                    }
+                    return nil
+                }
+            }
+
+            header, err := tar.FileInfoHeader(s, filepath.ToSlash(target))
+            if err != nil {
+                return errors.WrapIff(err, "failed to get tar#FileInfoHeader for '%s'", fileOrDirPath)
+            }
+
+            header.Name = strings.TrimPrefix(fileOrDirPath, a.Filesystem.Path()+"/")
+            if err := tw.WriteHeader(header); err != nil {
+                return errors.WrapIff(err, "failed to write tar#FileInfoHeader for '%s'", fileOrDirPath)
+            }
+
+            if s.Mode().IsRegular() {
+                file, err := os.Open(fileOrDirPath)
+                if err != nil {
+                    return err
+                }
+                defer file.Close()
+                if _, err := io.Copy(tw, file); err != nil {
+                    return errors.WrapIff(err, "failed to copy '%s' to archive", fileOrDirPath)
+                }
+            }
+        }
+    }
+
+    return nil
+}
