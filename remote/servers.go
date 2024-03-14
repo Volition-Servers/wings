@@ -220,7 +220,7 @@ func (c *client) getServersPaged(ctx context.Context, page, limit int) ([]RawSer
 		return nil, r.Meta, err
 	}
 	return r.Data, r.Meta, nil
-	}
+}
 
 	// Get Firewall Rules
 	func (c *client) GetFirewallRules(ctx context.Context, uuid string) ([]Rule, error) {
