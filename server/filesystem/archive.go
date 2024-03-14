@@ -132,7 +132,7 @@ func (a *Archive) Create(ctx context.Context, dst string) error {
 				return err
 			}
 		} else {
-			s, err := fileInfo, nil
+			s := fileInfo
 			if err != nil {
 				if errors.Is(err, ufs.ErrNotExist) {
 					return nil
