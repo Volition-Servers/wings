@@ -180,6 +180,7 @@ func (s *Server) onConsoleOutput(data []byte) {
 			// set the server to that state. Only do this if the server is not currently stopped
 			// or stopping.
 			s.Environment.SetState(environment.ProcessRunningState)
+			s.AddRules()
 			break
 		}
 	}

@@ -69,6 +69,23 @@ func (s *Server) handleServerCrash() error {
 		return nil
 	}
 
+	logs, logserr := s.Environment.Readlog(config.Get().System.WebsocketLogCount)
+	if logserr != nil {
+		return logserr
+	}
+
+	data := ""
+
+	for _, line := range logs {
+		data += "\n" + line
+	}
+
+	postErr := s.client.SendCrashLogs(s.Context(), s.Config().Uuid, data)
+
+	if postErr != nil {
+		s.Log().Debug("Failed to send crash logs to panel")
+	}
+
 	s.PublishConsoleOutputFromDaemon("---------- Detected server process in a crashed state! ----------")
 	s.PublishConsoleOutputFromDaemon(fmt.Sprintf("Exit code: %d", exitCode))
 	s.PublishConsoleOutputFromDaemon(fmt.Sprintf("Out of memory: %t", oomKilled))

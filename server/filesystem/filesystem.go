@@ -256,6 +256,21 @@ func (fs *Filesystem) Chmod(path string, mode ufs.FileMode) error {
 	return fs.unixFS.Chmod(path, mode)
 }
 
+// SafePath ensures that the requested path is within the filesystem's root directory.
+func (fs *Filesystem) SafePath(requestedPath string) (string, error) {
+    // Implementation of the method to ensure the requested path is safe
+    // and does not escape the root directory of the filesystem.
+    // This is just a placeholder implementation.
+    safePath, err := filepath.Abs(filepath.Join(fs.unixFS.BasePath(), requestedPath))
+    if err != nil {
+        return "", err
+    }
+    if !strings.HasPrefix(safePath, fs.unixFS.BasePath()) {
+        return "", errors.New("path resolves outside the server root")
+    }
+    return safePath, nil
+}
+
 // Begin looping up to 50 times to try and create a unique copy file name. This will take
 // an input of "file.txt" and generate "file copy.txt". If that name is already taken, it will
 // then try to write "file copy 2.txt" and so on, until reaching 50 loops. At that point we
