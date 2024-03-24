@@ -18,14 +18,13 @@ dependencies, and allowing users to authenticate with the same credentials they 
 I would like to extend my sincere thanks to the following sponsors for helping fund Pterodactyl's development.
 [Interested in becoming a sponsor?](https://github.com/sponsors/matthewpi)
 
-| Company                                                   | About                                                                                                                                                                                                                                           |
-|-----------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [**Aussie Server Hosts**](https://aussieserverhosts.com/) | No frills Australian Owned and operated High Performance Server hosting for some of the most demanding games serving Australia and New Zealand.                                                                                                 |
-| [**BisectHosting**](https://www.bisecthosting.com/)       | BisectHosting provides Minecraft, Valheim and other server hosting services with the highest reliability and lightning fast support since 2012.                                                                                                 |
-| [**MineStrator**](https://minestrator.com/)               | Looking for the most highend French hosting company for your minecraft server? More than 24,000 members on our discord trust us. Give us a try!                                                                                                 |
-| [**VibeGAMES**](https://vibegames.net/)                   | VibeGAMES is a game server provider that specializes in DDOS protection for the games we offer. We have multiple locations in the US, Brazil, France, Germany, Singapore, Australia and South Africa.                                           |
-| [**HostEZ**](https://hostez.io)                           | US & EU Rust & Minecraft Hosting. DDoS Protected bare metal, VPS and colocation with low latency, high uptime and maximum availability. EZ!                                                                                                     |
-| [**Blueprint**](https://blueprint.zip/?pterodactyl=true)  | Create and install Pterodactyl addons and themes with the growing Blueprint framework - the package-manager for Pterodactyl. Use multiple modifications at once without worrying about conflicts and make use of the large extension ecosystem. |
+| Company                                                   | About                                                                                                                                                                                                 |
+|-----------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [**Aussie Server Hosts**](https://aussieserverhosts.com/) | No frills Australian Owned and operated High Performance Server hosting for some of the most demanding games serving Australia and New Zealand.                                                       |
+| [**BisectHosting**](https://www.bisecthosting.com/)       | BisectHosting provides Minecraft, Valheim and other server hosting services with the highest reliability and lightning fast support since 2012.                                                       |
+| [**MineStrator**](https://minestrator.com/)               | Looking for the most highend French hosting company for your minecraft server? More than 24,000 members on our discord trust us. Give us a try!                                                       |
+| [**VibeGAMES**](https://vibegames.net/)                   | VibeGAMES is a game server provider that specializes in DDOS protection for the games we offer. We have multiple locations in the US, Brazil, France, Germany, Singapore, Australia and South Africa. |
+| [**HostEZ**](https://hostez.io)                           | US & EU Rust & Minecraft Hosting. DDoS Protected bare metal, VPS and colocation with low latency, high uptime and maximum availability. EZ!                                                           |
 
 ## Documentation
 
@@ -39,3 +38,24 @@ I would like to extend my sincere thanks to the following sponsors for helping f
 Please use the [pterodactyl/panel](https://github.com/pterodactyl/panel) repository to report any issues or make
 feature requests for Wings. In addition, the [security policy](https://github.com/pterodactyl/panel/security/policy) listed
 within that repository also applies to Wings.
+
+## Install Instructions
+
+1, Make a directory for wings source code and go to it: mkdir /srv/wings && cd /srv/wings
+
+2, Download the latest release with wget or manually from github: https://github.com/Volition-Servers/wings
+   a, Select the latest release and download, for example: wget https://github.com/Volition-Servers/wings/releases/download/v1.11.8-addons/wings.zip
+   b, Select the latest release and download with the Code -> Download ZIP Button and upload manually to your server
+
+3, Unzip it: unzip  v1.3.0.zip
+
+4, Paste WingsFiles to your wings folder
+
+7, Install go: https://golang.org/doc/install
+
+8, Build the new wings (if you created to other folder, change it - or if your wings is other folder, change it): 
+   - cd /srv/wings/ && go build -o /usr/local/bin/wings && chmod +x /usr/local/bin/wings
+
+8.A, If an error occurs run "go mod tidy"
+
+9, Restart wings: service wings restart
